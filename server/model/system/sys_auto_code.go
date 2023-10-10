@@ -2,9 +2,10 @@ package system
 
 import (
 	"errors"
-	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"go/token"
 	"strings"
+
+	"github.com/flipped-aurora/gin-vue-admin/server/global"
 )
 
 // AutoCodeStruct 初始版本自动化代码工具
@@ -16,12 +17,20 @@ type AutoCodeStruct struct {
 	Abbreviation       string   `json:"abbreviation"`       // Struct简称
 	Description        string   `json:"description"`        // Struct中文名称
 	AutoCreateApiToSql bool     `json:"autoCreateApiToSql"` // 是否自动创建api
+	AutoCreateResource bool     `json:"autoCreateResource"` // 是否自动创建资源标识
 	AutoMoveFile       bool     `json:"autoMoveFile"`       // 是否自动移动文件
+	BusinessDB         string   `json:"businessDB"`         // 业务数据库
 	Fields             []*Field `json:"fields,omitempty"`
 	HasTimer           bool
 	DictTypes          []string `json:"-"`
 	Package            string   `json:"package"`
 	PackageT           string   `json:"-"`
+	NeedValid          bool     `json:"-"`
+	NeedSort           bool     `json:"-"`
+	HasPic             bool     `json:"-"`
+	HasRichText        bool     `json:"-"`
+	HasFile            bool     `json:"-"`
+	NeedJSON           bool     `json:"-"`
 }
 
 func (a *AutoCodeStruct) Pretreatment() {
@@ -55,9 +64,13 @@ type Field struct {
 	ColumnName      string `json:"columnName"`      // 数据库字段
 	FieldSearchType string `json:"fieldSearchType"` // 搜索条件
 	DictType        string `json:"dictType"`        // 字典
+	Require         bool   `json:"require"`         // 是否必填
+	ErrorText       string `json:"errorText"`       // 校验失败文字
+	Clearable       bool   `json:"clearable"`       // 是否可清空
+	Sort            bool   `json:"sort"`            // 是否增加排序
 }
 
-var AutoMoveErr error = errors.New("创建代码成功并移动文件成功")
+var ErrAutoMove error = errors.New("创建代码成功并移动文件成功")
 
 type SysAutoCode struct {
 	global.GVA_MODEL

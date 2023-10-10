@@ -1,9 +1,7 @@
-//@author: [bstdn](https://github.com/bstdn)
-//@description: ESlint 语法检测
 module.exports = {
   root: true,
   parserOptions: {
-    parser: 'babel-eslint',
+    parser: '@babel/eslint-parser',
     sourceType: 'module'
   },
   env: {
@@ -12,24 +10,12 @@ module.exports = {
     es6: true
   },
   extends: ['plugin:vue/recommended', 'eslint:recommended'],
-
-  // add your custom rules here
-  // it is base on https://github.com/vuejs/eslint-config-vue
   rules: {
-    'vue/no-v-model-argument':'off',
-    'vue/max-attributes-per-line': [
-      2,
-      {
-        singleline: 10,
-        multiline: {
-          max: 1,
-          allowFirstLine: false
-        }
-      }
-    ],
+    'vue/no-v-model-argument': 0,
+    'vue/max-attributes-per-line': 2,
     'vue/singleline-html-element-content-newline': 'off',
     'vue/multiline-html-element-content-newline': 'off',
-    'vue/name-property-casing': ['error', 'PascalCase'],
+    'vue/multi-word-component-names': 'off',
     'vue/no-v-html': 'off',
     'accessor-pairs': 2,
     'arrow-spacing': [
@@ -174,7 +160,7 @@ module.exports = {
     'no-this-before-super': 2,
     'no-throw-literal': 2,
     'no-trailing-spaces': 2,
-    'no-undef': 2,
+    'no-undef': 'off',
     'no-undef-init': 2,
     'no-unexpected-multiline': 2,
     'no-unmodified-loop-condition': 2,

@@ -8,7 +8,10 @@
           </template>
           <div>
             <el-row>
-              <el-col :span="8" :offset="8">
+              <el-col
+                :span="8"
+                :offset="8"
+              >
                 <a href="https://github.com/flipped-aurora/gin-vue-admin">
                   <img
                     class="org-img dom-center"
@@ -55,7 +58,10 @@
           </template>
           <div>
             <el-row>
-              <el-col :span="8" :offset="8">
+              <el-col
+                :span="8"
+                :offset="8"
+              >
                 <a href="https://github.com/flipped-aurora">
                   <img
                     class="org-img dom-center"
@@ -65,11 +71,24 @@
                 </a>
               </el-col>
             </el-row>
-            <el-row style="margin-left: 40px" :gutter="20">
-              <el-col v-for="(item, index) in members" :key="index" :span="8">
+            <el-row
+              style="margin-left: 40px"
+              :gutter="20"
+            >
+              <el-col
+                v-for="(item, index) in members"
+                :key="index"
+                :span="8"
+              >
                 <a :href="item.html_url">
-                  <img class="avatar-img" :src="item.avatar_url">
-                  <a class="author-name" style="">{{ item.login }}</a>
+                  <img
+                    class="avatar-img"
+                    :src="item.avatar_url"
+                  >
+                  <a
+                    class="author-name"
+                    style=""
+                  >{{ item.login }}</a>
                 </a>
               </el-col>
             </el-row>
@@ -86,7 +105,7 @@
               <el-timeline-item
                 v-for="(item,index) in dataTimeline"
                 :key="index"
-                timestamp="2018/4/12"
+                :timestamp="item.from"
                 placement="top"
               >
                 <el-card>
@@ -98,7 +117,8 @@
           </div>
           <el-button
             class="load-more"
-            type="primary" link
+            type="primary"
+            link
             @click="loadMore"
           >Load more</el-button>
         </el-card>
@@ -107,16 +127,15 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'About',
-}
-</script>
-
 <script setup>
 import { ref } from 'vue'
 import { Commits, Members } from '@/api/github'
+import { formatTimeToStr } from '@/utils/date'
 const page = ref(0)
+
+defineOptions({
+  name: 'About'
+})
 
 const loadMore = () => {
   page.value++
@@ -129,7 +148,7 @@ const loadCommits = () => {
     data.forEach((element) => {
       if (element.commit.message) {
         dataTimeline.value.push({
-          from: new Date(element.commit.author.date),
+          from: formatTimeToStr(element.commit.author.date, 'yyyy-MM-dd'),
           title: element.commit.author.name,
           showDayAndMonth: true,
           message: element.commit.message,

@@ -1,17 +1,22 @@
 import legacyPlugin from '@vitejs/plugin-legacy'
-// import usePluginImport from 'vite-plugin-importer';
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import { viteLogo } from './src/core/config'
 import Banner from 'vite-plugin-banner'
 import * as path from 'path'
 import * as dotenv from 'dotenv'
 import * as fs from 'fs'
 import vuePlugin from '@vitejs/plugin-vue'
+import GvaPosition from './vitePlugin/gvaPosition'
+import GvaPositionServer from './vitePlugin/codeServer'
+import fullImportPlugin from './vitePlugin/fullImport/fullImport.js'
 // @see https://cn.vitejs.dev/config/
 export default ({
   command,
   mode
 }) => {
-  const NODE_ENV = process.env.NODE_ENV || 'development'
+  const NODE_ENV = mode || 'development'
   const envFiles = [
     `.env.${NODE_ENV}`
   ]
@@ -26,14 +31,6 @@ export default ({
 
   const timestamp = Date.parse(new Date())
 
-  const rollupOptions = {
-    output: {
-      entryFileNames: `gva/gin-vue-admin-[name].${timestamp}.js`,
-      chunkFileNames: `js/gin-vue-admin-[name].${timestamp}.js`,
-      assetFileNames: `assets/gin-vue-admin-[name].${timestamp}.[ext]`
-    }
-  }
-
   const optimizeDeps = {}
 
   const alias = {
@@ -43,7 +40,15 @@ export default ({
 
   const esbuild = {}
 
-  return {
+  const rollupOptions = {
+    output: {
+      entryFileNames: '087AC4D233B64EB0[name].js',
+      chunkFileNames: '087AC4D233B64EB0[name].js',
+      assetFileNames: '087AC4D233B64EB0[name].[ext]',
+    },
+  }
+
+  const config = {
     base: './', // index.html文件所在位置
     root: './', // js导入的资源路径，src
     resolve: {
@@ -67,7 +72,6 @@ export default ({
       },
     },
     build: {
-      target: 'es2015',
       minify: 'terser', // 是否进行压缩,boolean | 'terser' | 'esbuild',默认使用terser
       manifest: false, // 是否产出manifest.json
       sourcemap: false, // 是否产出sourcemap.json
@@ -77,17 +81,36 @@ export default ({
     esbuild,
     optimizeDeps,
     plugins: [
+      GvaPositionServer(),
+      GvaPosition(),
       legacyPlugin({
         targets: ['Android > 39', 'Chrome >= 60', 'Safari >= 10.1', 'iOS >= 10.3', 'Firefox >= 54', 'Edge >= 15'],
-      }), vuePlugin(), [Banner(`\n Build based on gin-vue-admin \n Time : ${timestamp}`)]
+      }),
+      vuePlugin(),
+      [Banner(`\n Build based on gin-vue-admin \n Time : ${timestamp}`)]
     ],
     css: {
       preprocessorOptions: {
-        less: {
-          // 支持内联 JavaScript
-          javascriptEnabled: true,
+        scss: {
+          additionalData: `@use "@/style/element/index.scss" as *;`,
         }
       }
     },
   }
+
+  if (NODE_ENV === 'development') {
+    config.plugins.push(
+      fullImportPlugin()
+    )
+  } else {
+    config.plugins.push(AutoImport({
+      resolvers: [ElementPlusResolver()]
+    }),
+    Components({
+      resolvers: [ElementPlusResolver({
+        importStyle: 'sass'
+      })]
+    }))
+  }
+  return config
 }

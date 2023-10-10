@@ -2,8 +2,7 @@ import { useUserStore } from '@/pinia/modules/user'
 import { useRouterStore } from '@/pinia/modules/router'
 import getPageTitle from '@/utils/page'
 import router from '@/router'
-
-let asyncRouterFlag = 0
+import Nprogress from 'nprogress'
 
 const whiteList = ['Login', 'Init']
 
@@ -36,7 +35,9 @@ async function handleKeepAlive(to) {
   }
 }
 
-router.beforeEach(async(to, from, next) => {
+router.beforeEach(async(to, from) => {
+  const routerStore = useRouterStore()
+  Nprogress.start()
   const userStore = useUserStore()
   to.meta.matched = [...to.matched]
   handleKeepAlive(to)
@@ -45,58 +46,74 @@ router.beforeEach(async(to, from, next) => {
   document.title = getPageTitle(to.meta.title, to)
   if (whiteList.indexOf(to.name) > -1) {
     if (token) {
-      if (!asyncRouterFlag && whiteList.indexOf(from.name) < 0) {
-        asyncRouterFlag++
+      if (!routerStore.asyncRouterFlag && whiteList.indexOf(from.name) < 0) {
         await getRouter(userStore)
       }
       // token 可以解析但是却是不存在的用户 id 或角色 id 会导致无限调用
       if (userStore.userInfo?.authority?.defaultRouter != null) {
-        next({ name: userStore.userInfo.authority.defaultRouter })
+        if (router.hasRoute(userStore.userInfo.authority.defaultRouter)) {
+          return { name: userStore.userInfo.authority.defaultRouter }
+        } else {
+          return { path: '/layout/404' }
+        }
       } else {
         // 强制退出账号
         userStore.ClearStorage()
-        next({
+        return {
           name: 'Login',
           query: {
             redirect: document.location.hash
           }
-        })
-        return
+        }
       }
     } else {
-      next()
+      return true
     }
   } else {
     // 不在白名单中并且已经登录的时候
     if (token) {
       // 添加flag防止多次获取动态路由和栈溢出
-      if (!asyncRouterFlag && whiteList.indexOf(from.name) < 0) {
-        asyncRouterFlag++
+      if (!routerStore.asyncRouterFlag && whiteList.indexOf(from.name) < 0) {
         await getRouter(userStore)
         if (userStore.token) {
-          next({ ...to, replace: true })
+          if (router.hasRoute(userStore.userInfo.authority.defaultRouter)) {
+            return { ...to, replace: true }
+          } else {
+            return { path: '/layout/404' }
+          }
         } else {
-          next({
+          return {
             name: 'Login',
             query: { redirect: to.href }
-          })
+          }
         }
       } else {
         if (to.matched.length) {
-          next()
+          return true
         } else {
-          next({ path: '/layout/404' })
+          return { path: '/layout/404' }
         }
       }
     }
     // 不在白名单中并且未登录的时候
     if (!token) {
-      next({
+      return {
         name: 'Login',
         query: {
           redirect: document.location.hash
         }
-      })
+      }
     }
   }
+})
+
+router.afterEach(() => {
+  // 路由加载完成后关闭进度条
+  document.getElementsByClassName('main-cont main-right')[0]?.scrollTo(0, 0)
+  Nprogress.done()
+})
+
+router.onError(() => {
+  // 路由发生错误后销毁进度条
+  Nprogress.remove()
 })

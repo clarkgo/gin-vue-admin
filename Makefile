@@ -2,7 +2,7 @@ SHELL = /bin/bash
 
 #SCRIPT_DIR         = $(shell pwd)/etc/script
 #请选择golang版本
-BUILD_IMAGE_SERVER  = golang:1.16
+BUILD_IMAGE_SERVER  = golang:1.18
 #请选择node版本
 BUILD_IMAGE_WEB     = node:16
 #项目名称
@@ -16,6 +16,11 @@ REPOSITORY          = registry.cn-hangzhou.aliyuncs.com/${IMAGE_NAME}
 
 ifeq ($(TAGS_OPT),)
 TAGS_OPT            = latest
+else
+endif
+
+ifeq ($(PLUGIN),)
+PLUGIN            = email
 else
 endif
 
@@ -64,3 +69,10 @@ image: build
 #尝鲜版
 images: build build-image-web build-image-server
 	docker build -t ${REPOSITORY}/all:${TAGS_OPT} -f deploy/docker/Dockerfile .
+	
+#插件快捷打包： make plugin PLUGIN="这里是插件文件夹名称,默认为email"
+plugin:
+	if [ -d ".plugin" ];then rm -rf .plugin ; else echo "OK!"; fi && mkdir -p .plugin/${PLUGIN}/{server/plugin,web/plugin} \
+	&& if [ -d "server/plugin/${PLUGIN}" ];then cp -r server/plugin/${PLUGIN} .plugin/${PLUGIN}/server/plugin/ ; else echo "OK!"; fi \
+	&& if [ -d "web/src/plugin/${PLUGIN}" ];then cp -r web/src/plugin/${PLUGIN} .plugin/${PLUGIN}/web/plugin/ ; else echo "OK!"; fi \
+	&& cd .plugin && zip -r ${PLUGIN}.zip ${PLUGIN} && mv ${PLUGIN}.zip ../ && cd ..
